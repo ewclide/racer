@@ -1,7 +1,10 @@
 import { Light, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
+import { GameMap } from './map';
 import { Player } from './player';
 import { Loader } from './loader';
-import { GameMap } from './map';
+import { Coin } from './coin';
+
+let global: Context | null = null;
 
 export class Context {
     scene: Scene = new Scene();
@@ -10,6 +13,7 @@ export class Context {
     lights: Map<string, Light> = new Map();
     loader: Loader = new Loader();
     players: Map<number, Player> = new Map();
+    coins: Array<Coin> = [];
     map: GameMap = new GameMap();
 
     constructor() {
@@ -19,11 +23,25 @@ export class Context {
 
         document.body.appendChild(domElement);
         window.addEventListener( 'resize', this._onResize);
+
+        this.bind();
     }
 
     private _onResize = (): void => {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
-        this.renderer.setSize( window.innerWidth, window.innerHeight );
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    bind(): void {
+        global = this;
+    }
+
+    static get(): Context {
+        if (global === null) {
+            throw new Error('Invalid game context');
+        }
+
+        return global;
     }
 }

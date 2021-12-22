@@ -1,12 +1,15 @@
-import { Loop } from './loop';
-import { Player } from './player';
-import { TimeSystem } from './time';
-import { Context } from './context';
-import { World } from './world';
+import { debugRAF, randf, randi } from './utils';
 import { InputSystem } from './input';
-import { Coin } from './coin';
-import { randf, randi } from './utils';
 import { MAP_LENGTH } from './map';
+import { TimeSystem } from './time';
+import { Collider } from './collider';
+import { Context } from './context';
+import { Player } from './player';
+import { World } from './world';
+import { Loop } from './loop';
+import { Coin } from './coin';
+
+// debugRAF();
 
 export class Game {
     private _context: Context;
@@ -14,15 +17,17 @@ export class Game {
     private _loop: Loop;
     private _time: TimeSystem;
     private _input: InputSystem;
-    private _coins: Array<Coin>;
+    private _collider: Collider;
 
     constructor() {
-        this._context = new Context();
+        const context = new Context();
+
+        this._context = context;
         this._world = new World();
         this._loop = new Loop(this._cycle);
         this._time = new TimeSystem();
         this._input = new InputSystem();
-        this._coins = [];
+        this._collider = new Collider();
 
         this._loop.onBlur = (blured: boolean): void => {
             if (blured) {
@@ -31,28 +36,30 @@ export class Game {
                 this._time.play();
             }
         }
-
-        this._world.create(this._context);
     }
 
     private _generateCoins = () => {
+        const { coins } = this._context;
+
         let count = 70;
 
         for (let i = 0; i < count; i++) {
             const coin = new Coin();
-            coin.line = randi(0, 3);
-            coin.position.z = randf(10, MAP_LENGTH);
-            coin.init(this._context);
+            coin.setPosition(randi(0, 3), randf(10, MAP_LENGTH));
+            coin.init();
 
-            this._coins.push(coin);
+            coins.push(coin);
         }
     }
 
     private _cycle = (): void => {
-        const { renderer, scene, camera, map, players } = this._context;
+        this._context.bind();
+
+        const { renderer, scene, camera, map, players, coins } = this._context;
         const { delta } = this._time;
 
         map.update(delta);
+        this._collider.update(delta);
 
         for (const player of players.values()) {
             if (this._input.isActiveKey('A')) {
@@ -66,7 +73,7 @@ export class Game {
             player.update(delta);
         }
 
-        for (const coin of this._coins) {
+        for (const coin of coins) {
             coin.update(delta);
         }
 
@@ -79,7 +86,7 @@ export class Game {
     addPlayer(player: Player): void {
         const { players } = this._context;
 
-        player.init(this._context);
+        player.init();
         players.set(player.id, player);
     }
 

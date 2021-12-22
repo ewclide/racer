@@ -2,10 +2,8 @@ import { AmbientLight, Color, DirectionalLight, Fog, Vector3 } from 'three';
 import { Context } from './context';
 
 export class World {
-    private _context!: Context;
-
-    create(context: Context) {
-        const { camera, lights, scene, map } = context;
+    constructor() {
+        const { camera, lights, scene, map } = Context.get();
 
         const sun = new DirectionalLight(0xffffff);
         sun.position.set(0, 20, 10);
@@ -23,11 +21,13 @@ export class World {
         camera.position.y = 10;
         camera.lookAt(new Vector3(0, 0, 25));
 
+        // camera.position.z = 0;
+        // camera.position.y = 70;
+        // camera.lookAt(new Vector3(0, 0, 1));
+
         lights.set('sun', sun);
         lights.set('sky', sky);
 
-        map.init(context);
-
-        this._context = context;
+        map.init();
     }
 }

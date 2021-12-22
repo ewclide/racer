@@ -1,27 +1,26 @@
 import { Object3D } from 'three';
 import { Context } from './context';
 
-export const MAP_OFFSET = 10;
+export const MAP_OFFSET = 50;
 export const LINE_WIDTH = 4;
 export const LINE_OFFSET = 6;
 export const SPEED = 120;
 export const MAP_LENGTH = 1386.83 * 2;
 
 export class GameMap {
-    private _context!: Context;
     private _models: Array<Object3D> = [];
     private _loading: Promise<void> = Promise.resolve();
 
-    init(context: Context): void {
-        this._context = context;
+    init(): void {
         this.load();
     }
 
     async load(): Promise<void> {
-        const model = await this._context.loader.load('./assets/models/desert/model.gltf');
+        const context = Context.get();
+        const model = await context.loader.load('./assets/models/desert/model.gltf');
 
         this._models.push(model, model.clone());
-        this._context.scene.add(...this._models);
+        context.scene.add(...this._models);
 
         const [m1, m2] = this._models;
 
