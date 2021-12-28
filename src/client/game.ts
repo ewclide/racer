@@ -8,6 +8,7 @@ import { Player } from './player';
 import { World } from './world';
 import { Loop } from './loop';
 import { Coin } from './coin';
+import { UI } from './ui';
 
 // debugRAF();
 
@@ -18,6 +19,7 @@ export class Game {
     private _time: TimeSystem;
     private _input: InputSystem;
     private _collider: Collider;
+    private _ui: UI;
 
     constructor() {
         const context = new Context();
@@ -28,6 +30,7 @@ export class Game {
         this._time = new TimeSystem();
         this._input = new InputSystem();
         this._collider = new Collider();
+        this._ui = new UI();
 
         this._loop.onBlur = (blured: boolean): void => {
             if (blured) {
@@ -35,13 +38,12 @@ export class Game {
             } else {
                 this._time.play();
             }
-        }
+        };
     }
 
-    private _generateCoins = () => {
+    private _generateCoins = (): void => {
         const { coins } = this._context;
-
-        let count = 70;
+        const count = 70;
 
         for (let i = 0; i < count; i++) {
             const coin = new Coin();
@@ -55,7 +57,7 @@ export class Game {
     private _cycle = (): void => {
         this._context.bind();
 
-        const { renderer, scene, camera, map, players, coins } = this._context;
+        const { renderer, scene, camera, map, players, coins, uiData } = this._context;
         const { delta } = this._time;
 
         map.update(delta);
@@ -79,6 +81,11 @@ export class Game {
 
         this._time.update();
         this._input.update();
+
+        if (uiData.needsUpdate) {
+            this._ui.update();
+            uiData.needsUpdate = false;
+        }
 
         renderer.render(scene, camera);
     }

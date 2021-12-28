@@ -1,0 +1,33 @@
+
+interface Scores {
+    money: number;
+    distance: number;
+}
+
+const ui = {
+    className: styles.scores,
+    state: {
+        money: 0,
+        distance: 0
+    },
+    nodes: [
+        {
+            id: 'money',
+            className: styles['score-item'],
+            nodes: [
+                { tag: 'span', text: 'Money:' },
+                { tag: 'text', text: ({ money }: Scores) => money }
+            ]
+            // html: ({ money }: Scores) => `<span>Money</span> ${money}`
+        },
+        {
+            id: 'distance',
+            className: styles['score-item'],
+            nodes: [
+                { tag: 'span', text: 'Distance:' },
+                { tag: 'text', text: ({ distance }: Scores) => distance }
+            ]
+            // html: ({ distance }: Scores) => `<span>Distance</span> ${distance}`
+        }
+    ]
+};

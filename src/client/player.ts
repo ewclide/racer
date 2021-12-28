@@ -1,5 +1,5 @@
 import { Object3D, Vector3 } from 'three';
-import { LINE_OFFSET, LINE_WIDTH } from './map';
+import { LINE_OFFSET, LINE_WIDTH, SPEED } from './map';
 import { idGetter } from './utils';
 import { Context } from './context';
 import { AABB } from './collider';
@@ -24,7 +24,7 @@ export class Player {
         this.load();
 
         this.aabb.setSize(2.2, 5);
-        this.aabb.visible = true;
+        // this.aabb.visible = true;
         // @ts-expect-error
         window.player = this;
     }
@@ -41,10 +41,14 @@ export class Player {
     update(dt: number): void {
         if (this._model === undefined) { return; }
 
+        const { uiData } = Context.get();
         const { position } = this._model;
 
         position.x = -this._line * LINE_WIDTH + LINE_OFFSET;
         this.aabb.setPivot(position.x, position.y);
+
+        uiData.distance += SPEED * dt;
+        uiData.needsUpdate = true;
     }
 
     moveLeft(): void {
@@ -58,10 +62,13 @@ export class Player {
     takeCoin(coin: Coin): void {
         if (coin.taken === true) { return; }
 
+        const { uiData } = Context.get();
+
         this.money++;
         coin.hide();
         coin.taken = true;
 
-        console.log('takeCoin')
+        uiData.money = this.money;
+        uiData.needsUpdate = true;
     }
 }
