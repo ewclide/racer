@@ -1,48 +1,33 @@
-import React from 'react';
+import { observer } from 'mobx-react-lite';
 import cn from 'classnames';
-import { UIData } from '../context';
-import styles from './app.css';
+import styles from './app.module.css';
+import { useAppContext } from './context';
 
-interface ScoresProps {
-    money: number;
-    distance: number;
-}
+const Money = observer(() => {
+    const { money } = useAppContext();
 
-function Scores({ money, distance }: ScoresProps): React.ReactElement {
     return (
-        <div className={styles.scores}>
-            <Money value={money} />
-            <Distance value={distance} />
+        <div className={cn(styles['score-item'], styles.money)}>
+            <span>Money:</span> {money}
         </div>
     );
-}
+});
 
-class Money extends React.PureComponent<{ value: number }> {
-    render(): React.ReactNode {
-        const { value } = this.props;
-        return (
-            <div className={cn(styles['score-item'], styles.money)}>
-                <span>Money:</span> {value}
-            </div>
-        );
-    }
-}
-
-class Distance extends React.PureComponent<{ value: number }> {
-    render(): React.ReactNode {
-        const { value } = this.props;
-        return (
-            <div className={cn(styles['score-item'], styles.distance)}>
-                <span>Distance:</span> {Math.floor(value / 1000)}km {Math.floor(value % 1000)}m
-            </div>
-        );
-    }
-}
-
-export function App(props: UIData): React.ReactElement {
-    const { money, distance, time } = props;
+const Distance = observer(() => {
+    const { distance_km, distance_m } = useAppContext();
 
     return (
-        <Scores money={money} distance={distance} />
+        <div className={cn(styles['score-item'], styles.distance)}>
+            <span>Distance:</span> {distance_km}km {distance_m}m
+        </div>
+    );
+});
+
+export function App() {
+    return (
+        <div className={styles.scores}>
+            <Money />
+            <Distance />
+        </div>
     );
 }

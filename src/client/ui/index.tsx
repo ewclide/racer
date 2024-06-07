@@ -1,29 +1,31 @@
-import React from 'react';
 import ReactDOM from 'react-dom';
-import { Context } from '../context';
+import { AppContextProvider } from './context';
+import { GameContext } from '../context';
+import { GameStore } from '../store';
 import { App } from './app';
-// import { EasyUIElement } from '../../easy-ui';
-// import styles from './app.css';
+import styles from './app.module.css';
 
 export class UI {
     container: HTMLElement;
-    // element: EasyUIElement<Scores>;
 
     constructor() {
-        const context = Context.get();
-
         this.container = document.createElement('div');
-        this.container.id = 'ui';
-        // this.element = new EasyUIElement<Scores>(this.container, ui);
+        this.container.id = 'game-ui';
+        this.container.className = styles.root;
 
+        const context = GameContext.get();
         context.container.appendChild(this.container);
 
-        this.update();
+        console.log(context.store);
+
+        this.create(context.store);
     }
 
-    update(): void {
-        const { uiData } = Context.get();
-        ReactDOM.render(<App {...uiData} />, this.container);
-        // console.log('redraw UI');
+    create(store: GameStore): void {
+        ReactDOM.render(
+            <AppContextProvider value={store}>
+                <App />
+            </AppContextProvider>
+        , this.container);
     }
 }
