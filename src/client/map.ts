@@ -1,5 +1,5 @@
 import { Object3D } from 'three';
-import { Context } from './context';
+import { GameContext } from './context';
 
 export const MAP_OFFSET = 50;
 export const LINE_WIDTH = 4;
@@ -16,7 +16,7 @@ export class GameMap {
     }
 
     async load(): Promise<void> {
-        const context = Context.get();
+        const context = GameContext.get();
         const model = await context.loader.load('./assets/models/desert/model.gltf');
 
         this._models.push(model, model.clone());

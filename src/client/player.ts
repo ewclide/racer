@@ -1,7 +1,7 @@
 import { Object3D, Vector3 } from 'three';
-import { LINE_OFFSET, LINE_WIDTH, SPEED } from './map';
+import { GameContext } from './context';
+import { SPEED } from './map';
 import { idGetter } from './utils';
-import { Context } from './context';
 import { AABB } from './collider';
 import { Coin } from './coin';
 
@@ -9,7 +9,6 @@ const getId = idGetter();
 
 export class Player {
     id: number = getId();
-    money: number = 0;
     aabb: AABB = new AABB();
 
     private _model!: Object3D;
@@ -30,7 +29,7 @@ export class Player {
     }
 
     async load(): Promise<void> {
-        const context = Context.get();
+        const context = GameContext.get();
         const model = await context.loader.load('./assets/models/car/model.gltf');
         this._model = model;
 
@@ -41,14 +40,8 @@ export class Player {
     update(dt: number): void {
         if (this._model === undefined) { return; }
 
-        const { uiData } = Context.get();
-        const { position } = this._model;
-
-        position.x = -this._line * LINE_WIDTH + LINE_OFFSET;
-        this.aabb.setPivot(position.x, position.y);
-
-        uiData.distance += SPEED * dt;
-        uiData.needsUpdate = true;
+        const { store } = GameContext.get();
+        store.addDistance(SPEED * dt);
     }
 
     moveLeft(): void {
@@ -62,13 +55,10 @@ export class Player {
     takeCoin(coin: Coin): void {
         if (coin.taken === true) { return; }
 
-        const { uiData } = Context.get();
+        const { store } = GameContext.get();
 
-        this.money++;
         coin.hide();
         coin.taken = true;
-
-        uiData.money = this.money;
-        uiData.needsUpdate = true;
+        store.addMoney(coin.value);
     }
 }

@@ -1,6 +1,6 @@
 import { Object3D, Vector3 } from 'three';
 import { LINE_OFFSET, LINE_WIDTH, MAP_LENGTH, MAP_OFFSET, SPEED } from './map';
-import { Context } from './context';
+import { GameContext } from './context';
 import { randi } from './utils';
 import { AABB } from './collider';
 
@@ -13,6 +13,7 @@ export class Coin {
     line: number = 0;
     aabb: AABB = new AABB();
     taken: boolean = false;
+    value: number = 5;
 
     init(): void {
         this.load();
@@ -21,7 +22,7 @@ export class Coin {
     }
 
     async load(): Promise<void> {
-        const context = Context.get();
+        const context = GameContext.get();
 
         if (model === undefined) {
             model = await context.loader.load('./assets/models/coin/model.gltf');

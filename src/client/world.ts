@@ -1,9 +1,9 @@
 import { AmbientLight, Color, DirectionalLight, Fog, Vector3 } from 'three';
-import { Context } from './context';
+import { GameContext } from './context';
 
 export class World {
     constructor() {
-        const { camera, lights, scene, map } = Context.get();
+        const { camera, lights, scene, map } = GameContext.get();
 
         const sun = new DirectionalLight(0xffffff);
         sun.position.set(0, 20, 10);

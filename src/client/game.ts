@@ -1,9 +1,9 @@
 import { debugRAF, randf, randi } from './utils';
 import { InputSystem } from './input';
+import { GameContext } from './context';
 import { MAP_LENGTH } from './map';
 import { TimeSystem } from './time';
 import { Collider } from './collider';
-import { Context } from './context';
 import { Player } from './player';
 import { World } from './world';
 import { Loop } from './loop';
@@ -13,7 +13,7 @@ import { UI } from './ui';
 // debugRAF();
 
 export class Game {
-    private _context: Context;
+    private _context: GameContext;
     private _world: World;
     private _loop: Loop;
     private _time: TimeSystem;
@@ -22,7 +22,7 @@ export class Game {
     private _ui: UI;
 
     constructor() {
-        const context = new Context();
+        const context = new GameContext();
 
         this._context = context;
         this._world = new World();
@@ -57,7 +57,7 @@ export class Game {
     private _cycle = (): void => {
         this._context.bind();
 
-        const { renderer, scene, camera, map, players, coins, uiData } = this._context;
+        const { renderer, scene, camera, map, players, coins } = this._context;
         const { delta } = this._time;
 
         map.update(delta);
@@ -81,11 +81,6 @@ export class Game {
 
         this._time.update();
         this._input.update();
-
-        if (uiData.needsUpdate) {
-            this._ui.update();
-            uiData.needsUpdate = false;
-        }
 
         renderer.render(scene, camera);
     }

@@ -1,26 +1,14 @@
 import { Light, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
+import { GameStore } from './store';
 import { GameMap } from './map';
 import { Player } from './player';
 import { Loader } from './loader';
 import { Coin } from './coin';
 
-let global: Context | null = null;
+let global: GameContext | null = null;
 
-export interface UIData {
-    money: number;
-    distance: number;
-    time: [number, number];
-    needsUpdate: boolean;
-}
-
-export class Context {
-    uiData: UIData = {
-        money: 0,
-        distance: 0,
-        time: [0, 0],
-        needsUpdate: false
-    }
-
+export class GameContext {
+    store: GameStore = GameStore.createMobXStore();
     container: HTMLElement = document.createElement('div');
     scene: Scene = new Scene();
     camera: PerspectiveCamera = new PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
@@ -53,7 +41,7 @@ export class Context {
         global = this;
     }
 
-    static get(): Context {
+    static get(): GameContext {
         if (global === null) {
             throw new Error('Invalid game context');
         }

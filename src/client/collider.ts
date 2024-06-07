@@ -1,5 +1,5 @@
 import { BoxGeometry, Mesh, MeshBasicMaterial, Plane, PlaneGeometry, Vector2 } from 'three';
-import { Context } from './context';
+import { GameContext } from './context';
 import { SPEED } from './map';
 import { Player } from './player';
 
@@ -22,7 +22,7 @@ export class AABB {
             plane_ = plane;
         }
 
-        const context = Context.get();
+        const context = GameContext.get();
         this.plane = plane_.clone();
         this.plane.visible = false;
         context.scene.add(this.plane);
@@ -65,7 +65,7 @@ export class Collider {
     }
 
     update(dt: number): void {
-        const { coins, players } = Context.get();
+        const { coins, players } = GameContext.get();
         const player = players.values().next().value as Player;
         const offset = SPEED * dt;
 
