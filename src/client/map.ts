@@ -4,7 +4,6 @@ import { GameContext } from './context';
 export const MAP_OFFSET = 50;
 export const LINE_WIDTH = 4;
 export const LINE_OFFSET = 6;
-export const SPEED = 120;
 export const MAP_LENGTH = 1386.83 * 2;
 
 export class GameMap {
@@ -16,11 +15,11 @@ export class GameMap {
     }
 
     async load(): Promise<void> {
-        const context = GameContext.get();
-        const model = await context.loader.load('./assets/models/desert/model.gltf');
+        const { loader, scene } = GameContext.get();
+        const model = await loader.load('./assets/models/desert/model.gltf');
 
         this._models.push(model, model.clone());
-        context.scene.add(...this._models);
+        scene.add(...this._models);
 
         const [m1, m2] = this._models;
 
@@ -31,10 +30,12 @@ export class GameMap {
     update(dt: number): void {
         if (this._models.length === 0) { return; }
 
+        const { player } = GameContext.get().game;
+
         for (const model of this._models) {
             const { position } = model;
 
-            position.z -= SPEED * dt;
+            position.z -= player.speed.z * dt;
             if (position.z < -MAP_LENGTH / 2 - MAP_OFFSET) {
                 position.z += MAP_LENGTH * 2;
             }

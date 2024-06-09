@@ -1,7 +1,5 @@
-import { BoxGeometry, Mesh, MeshBasicMaterial, Plane, PlaneGeometry, Vector2 } from 'three';
+import { Mesh, MeshBasicMaterial, PlaneGeometry, Vector2 } from 'three';
 import { GameContext } from './context';
-import { SPEED } from './map';
-import { Player } from './player';
 
 let plane_: Mesh;
 
@@ -65,9 +63,8 @@ export class Collider {
     }
 
     update(dt: number): void {
-        const { coins, players } = GameContext.get();
-        const player = players.values().next().value as Player;
-        const offset = SPEED * dt;
+        const { coins, player } = GameContext.get().game;
+        const offset = player.speed.z * dt;
 
         let dist = 0;
         let diagonal = 0;

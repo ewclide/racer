@@ -1,5 +1,5 @@
 import { Object3D, Vector3 } from 'three';
-import { LINE_OFFSET, LINE_WIDTH, MAP_LENGTH, MAP_OFFSET, SPEED } from './map';
+import { LINE_OFFSET, LINE_WIDTH, MAP_LENGTH, MAP_OFFSET } from './map';
 import { GameContext } from './context';
 import { randi } from './utils';
 import { AABB } from './collider';
@@ -55,9 +55,10 @@ export class Coin {
         if (this._model === undefined) { return; }
 
         const { position } = this;
+        const { player } = GameContext.get().game;
 
         position.x = -this.line * LINE_WIDTH + LINE_OFFSET;
-        position.z -= SPEED * dt;
+        position.z -= player.speed.z * dt;
         position.y = 2;
 
         if (position.z < -MAP_OFFSET) {

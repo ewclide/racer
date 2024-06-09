@@ -1,27 +1,23 @@
-import { Light, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
+import { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { GameStore } from './store';
-import { GameMap } from './map';
-import { Player } from './player';
 import { Loader } from './loader';
-import { Coin } from './coin';
+import { Game } from './game';
 
 let global: GameContext | null = null;
 
 export class GameContext {
-    store: GameStore = GameStore.createMobXStore();
-    container: HTMLElement = document.createElement('div');
-    scene: Scene = new Scene();
-    camera: PerspectiveCamera = new PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
+    scene = new Scene();
+    store = GameStore.createMobXStore();
+    container = document.createElement('div');
+    camera = new PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
     renderer: WebGLRenderer = new WebGLRenderer({ antialias: true });
-    lights = new Map<string, Light>();
-    loader: Loader = new Loader();
-    players = new Map<number, Player>();
-    coins: Array<Coin> = [];
-    map: GameMap = new GameMap();
+    loader = new Loader();
+    game: Game;
 
-    constructor() {
+    constructor(game: Game) {
         const { domElement } = this.renderer;
 
+        this.game = game;
         this.container.id = 'game';
         this.container.appendChild(domElement);
         document.body.appendChild(this.container);

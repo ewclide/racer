@@ -13,8 +13,11 @@ import { UI } from './ui';
 // debugRAF();
 
 export class Game {
+    readonly world: World;
+    readonly player: Player;
+    readonly coins: Coin[] = [];
+
     private _context: GameContext;
-    private _world: World;
     private _loop: Loop;
     private _time: TimeSystem;
     private _input: InputSystem;
@@ -22,15 +25,18 @@ export class Game {
     private _ui: UI;
 
     constructor() {
-        const context = new GameContext();
+        const context = new GameContext(this);
 
         this._context = context;
-        this._world = new World();
         this._loop = new Loop(this._cycle);
         this._time = new TimeSystem();
         this._input = new InputSystem();
         this._collider = new Collider();
         this._ui = new UI();
+
+        this.world = new World();
+        this.player = new Player();
+        this.player.init();
 
         this._loop.onBlur = (blured: boolean): void => {
             if (blured) {
@@ -42,7 +48,7 @@ export class Game {
     }
 
     private _generateCoins = (): void => {
-        const { coins } = this._context;
+        const { coins } = this;
         const count = 70;
 
         for (let i = 0; i < count; i++) {
@@ -57,23 +63,22 @@ export class Game {
     private _cycle = (): void => {
         this._context.bind();
 
-        const { renderer, scene, camera, map, players, coins } = this._context;
+        const { renderer, scene, camera } = this._context;
+        const { coins, player, world } = this;
         const { delta } = this._time;
 
-        map.update(delta);
+        world.update(delta);
         this._collider.update(delta);
 
-        for (const player of players.values()) {
-            if (this._input.isActiveKey('A')) {
-                player.moveLeft();
-            }
-
-            if (this._input.isActiveKey('D')) {
-                player.moveRight();
-            }
-
-            player.update(delta);
+        if (this._input.isActiveKey('A')) {
+            player.moveLeft();
         }
+
+        if (this._input.isActiveKey('D')) {
+            player.moveRight();
+        }
+
+        player.update(delta);
 
         for (const coin of coins) {
             coin.update(delta);
@@ -85,16 +90,8 @@ export class Game {
         renderer.render(scene, camera);
     }
 
-    addPlayer(player: Player): void {
-        const { players } = this._context;
-
-        player.init();
-        players.set(player.id, player);
-    }
-
     start(): void {
         this._generateCoins();
-
         this._loop.start();
     }
 
