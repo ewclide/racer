@@ -1,5 +1,7 @@
 export const roundInt = (value: number, power: number) => Math.floor(value / power) * power;
 
+export const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
+
 export const idGetter = (): () => number => {
     let id = 0;
     return () => id++;
