@@ -1,9 +1,13 @@
-import { AmbientLight, Color, DirectionalLight, Fog, Vector3 } from 'three';
+import { AmbientLight, Color, DirectionalLight, Fog, Light, Vector3 } from 'three';
 import { GameContext } from './context';
+import { GameMap } from './map';
 
 export class World {
+    private _map = new GameMap();
+    private _lights = new Map<string, Light>();
+
     constructor() {
-        const { camera, lights, scene, map } = GameContext.get();
+        const { camera, scene } = GameContext.get();
 
         const sun = new DirectionalLight(0xffffff);
         sun.position.set(0, 20, 10);
@@ -25,9 +29,12 @@ export class World {
         // camera.position.y = 70;
         // camera.lookAt(new Vector3(0, 0, 1));
 
-        lights.set('sun', sun);
-        lights.set('sky', sky);
+        this._lights.set('sun', sun);
+        this._lights.set('sky', sky);
+        this._map.init();
+    }
 
-        map.init();
+    update(dt: number) {
+        this._map.update(dt);
     }
 }
