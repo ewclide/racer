@@ -100,6 +100,7 @@ export class Player {
 
         const { store } = GameContext.get();
         store.addDistance(this.speed.z * dt);
+        store.setSpeed(this.speed.length());
     }
 
     private _applyManualControl(dt: number) {
