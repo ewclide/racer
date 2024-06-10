@@ -5,7 +5,7 @@ export enum KeyState {
 
 interface Key {
     name: string;
-    active: boolean;
+    pushed: boolean;
     state: KeyState;
 }
 
@@ -17,11 +17,13 @@ export class InputSystem {
         window.addEventListener('keyup', this._handleKeyUp);
     }
 
-    isActiveKey(name: string): boolean {
+    isPushedKey(name: string): boolean {
         const key = this._keys.get(name);
-        if (key === undefined) { return false; }
+        return key === undefined ? false : key.pushed;
+    }
 
-        return key.active;
+    isPressedKey(name: string): boolean {
+        return this._keys.has(name);
     }
 
     getKey(name: string) {
@@ -30,28 +32,27 @@ export class InputSystem {
 
     private _handleKeyDown = (e: KeyboardEvent) => {
         const name = e.key.toUpperCase();
-
-        this._keys.set(name, {
-            name,
-            active: true,
-            state: KeyState.Down
-        });
+        if (this._keys.has(name) === false) {
+            this._keys.set(name, {
+                name,
+                pushed: true,
+                state: KeyState.Down
+            });
+        }
     }
 
     private _handleKeyUp = (e: KeyboardEvent) => {
         const name = e.key.toUpperCase();
         const key = this._keys.get(name);
-
-        if (key === undefined) { return; }
-
-        key.state = KeyState.Up;
-
-        this._keys.delete(name);
+        if (key !== undefined) {
+            key.state = KeyState.Up;
+            this._keys.delete(name);
+        }
     }
 
-    update(): void {
+    update(){
         for (const key of this._keys.values()) {
-            key.active = false;
+            key.pushed = false;
         }
     }
 }
