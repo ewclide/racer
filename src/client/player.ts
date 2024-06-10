@@ -15,27 +15,32 @@ const carPoint = new Vector3();
 const carOrient = new Quaternion();
 const wishTarget = new Vector3();
 const speedDir = new Vector3();
+const minRoadValue = -LINE_WIDTH * 2 + carSize.x / 2;
+const maxRoadValue = +LINE_WIDTH * 2 - carSize.x / 2;
 
 export class Player {
     aabb = new AABB();
     speed = new Vector3(0, 0, 1).multiplyScalar(SPEED);
     distance = 0;
+    autoPilotMode = true;
+    wheelSens = 0.2;
 
     private _modelNode: Group = new Group();
-    private _angle = 0;
+    private _wheelAngle = 0;
     private _linePositionX = 0;
     private _lineIndex = 0;
-    private _modelIsLoaded = false
+    private _modelIsLoaded = false;
+    private _moveManualSign = 0;
 
     get position(): Vector3 {
-        return this._modelNode.position || new Vector3();
+        return this._modelNode.position;
     }
 
     init(): void {
         this.aabb.setSize(carSize.x, carSize.z);
         this.load().then(() => {
-            this.setLine(2);
-            this.updatePosition(this._linePositionX);
+            this._setLine(2);
+            this._setPosition(this._linePositionX);
         });
     }
 
@@ -51,18 +56,67 @@ export class Player {
         this._modelIsLoaded = true;
     }
 
-    updatePosition = (value: number): void => {
-        if (this._modelIsLoaded === false) { return; }
+    moveLeftLine() {
+        this._setLine(Math.max(0, this._lineIndex - 1));
+    }
 
-        const { position } = this._modelNode;
+    moveRightLine() {
+        this._setLine(Math.min(3, this._lineIndex + 1))
+    }
 
-        position.x = value;
-        this.aabb.setPivot(position.x, position.y);
+    moveLeft() {
+        this._moveManualSign = +1;
+    }
+
+    moveRight() {
+        this._moveManualSign = -1;
+    }
+
+    takeCoin(coin: Coin) {
+        if (coin.taken === true) { return; }
+
+        const { store } = GameContext.get();
+
+        coin.hide();
+        coin.taken = true;
+        store.addMoney(coin.value);
     }
 
     update(dt: number): void {
         if (this._modelIsLoaded === false) { return; }
 
+        const canMove = this._checkPosition(dt);
+        if (canMove) {
+            if (this.autoPilotMode === true) {
+                this._applyAutoPilot(dt);
+            } else {
+                this._applyManualControl(dt);
+            }
+        } else {
+            this._alignWheels(dt, 20);
+            this._updatePosition(dt);
+            this._updateOrientation();
+        }
+
+        const { store } = GameContext.get();
+        store.addDistance(this.speed.z * dt);
+    }
+
+    private _applyManualControl(dt: number) {
+        let wheelSign = this._moveManualSign;
+        if (wheelSign !== 0) {
+            this._turnWheels(wheelSign, dt);
+        } else {
+            this._alignWheels(dt);
+        }
+
+        this._updatePosition(dt);
+        this._updateOrientation();
+        this._setLine(3 - Math.round((this._modelNode.position.x + LINE_OFFSET) / 4));
+        this._moveManualSign = 0;
+    }
+
+    private _applyAutoPilot(dt: number) {
         const curPositionX = this._modelNode.position.x;
         if (Math.abs(curPositionX - this._linePositionX) < 0.001) { return; }
 
@@ -71,52 +125,74 @@ export class Player {
         wishTarget.set(this._linePositionX, 0, LINE_WIDTH * 4);
         const wishDir = wishTarget.sub(carPoint).normalize();
         const dot = speedDir.dot(wishDir);
-        const moveSign = curPositionX > this._linePositionX ? -1 : 1;
+        const wheelSign = curPositionX > this._linePositionX ? -1 : 1;
 
         if (1 - dot < 0.001) {
             // If wheels directed along wish vector then copy this vector to speed
             this.speed.copy(wishDir).multiplyScalar(SPEED);
-            this._angle = moveSign * Math.acos(axisZ.dot(wishDir));
+            this._wheelAngle = wheelSign * Math.acos(axisZ.dot(wishDir));
         } else {
-            // Else rotate wheels by angle (max angle is PI / 4)
-            this._angle += moveSign * 0.2 * dt;
-            this._angle = clamp(this._angle, -PI4, PI4);
-            this.speed
-                .set(0, 0, 1)
-                .multiplyScalar(SPEED)
-                .applyAxisAngle(axisY, this._angle);
+            // Else turn wheels
+            this._turnWheels(wheelSign, dt);
         }
 
+        this._updatePosition(dt);
+        this._updateOrientation();
+    }
+
+    private _checkPosition(dt: number): boolean {
+        const npx = this._modelNode.position.x + this.speed.x * dt;
+        return npx >= minRoadValue && npx <= maxRoadValue;
+    }
+
+    private _updatePosition(dt: number) {
+        const newPosX = clamp(
+            this._modelNode.position.x + this.speed.x * dt,
+            minRoadValue,
+            maxRoadValue
+        );
+
+        this._setPosition(newPosX);
+    }
+
+    private _updateOrientation() {
         carOrient.setFromUnitVectors(axisZ, this.speed);
         this._modelNode.rotation.setFromQuaternion(carOrient);
-
-        const newPosX = curPositionX + this.speed.x * dt;
-        this.updatePosition(newPosX);
-
-        const { store } = GameContext.get();
-        store.addDistance(this.speed.z * dt);
     }
 
-    moveLeft(): void {
-        this.setLine(Math.max(0, this._lineIndex - 1))
+    private _turnWheels(sign: number, dt: number) {
+        this._wheelAngle += sign * this.wheelSens * dt;
+        this._wheelAngle = clamp(this._wheelAngle, -PI4, PI4);
+        this.speed
+            .set(0, 0, 1)
+            .multiplyScalar(SPEED)
+            .applyAxisAngle(axisY, this._wheelAngle);
     }
 
-    moveRight(): void {
-        this.setLine(Math.min(3, this._lineIndex + 1))
+    private _alignWheels(dt: number, extraSens: number = 1) {
+        if (Math.abs(this._wheelAngle) > 0.001) {
+            this._wheelAngle += -Math.sign(this._wheelAngle) * this.wheelSens * extraSens * dt;
+        } else {
+            this._wheelAngle = 0;
+        }
+
+        this.speed
+            .set(0, 0, 1)
+            .multiplyScalar(SPEED)
+            .applyAxisAngle(axisY, this._wheelAngle);
     }
 
-    setLine(line: number) {
+    private _setLine(line: number) {
         this._linePositionX = -line * LINE_WIDTH + LINE_OFFSET;
         this._lineIndex = line;
     }
 
-    takeCoin(coin: Coin): void {
-        if (coin.taken === true) { return; }
+    private _setPosition = (value: number): void => {
+        if (this._modelIsLoaded === false) { return; }
 
-        const { store } = GameContext.get();
+        const { position } = this._modelNode;
 
-        coin.hide();
-        coin.taken = true;
-        store.addMoney(coin.value);
+        position.x = value;
+        this.aabb.setPivot(position.x, position.y);
     }
 }

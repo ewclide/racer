@@ -70,11 +70,15 @@ export class Game {
         world.update(delta);
         this._collider.update(delta);
 
-        if (this._input.isActiveKey('A')) {
-            player.moveLeft();
+        if (this._input.isPushedKey('A')) {
+            player.moveLeftLine();
+        } else if (this._input.isPushedKey('D')) {
+            player.moveRightLine();
         }
 
-        if (this._input.isActiveKey('D')) {
+        if (this._input.isPressedKey('A')) {
+            player.moveLeft();
+        } else if (this._input.isPressedKey('D')) {
             player.moveRight();
         }
 
